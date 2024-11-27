@@ -1,0 +1,175 @@
+import React, { useState } from "react";
+import axios from "axios";
+
+const CalorieCalculator = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    age: "",
+    gender: "",
+    height: "",
+    weight: "",
+    activityFactor: "",
+  });
+  const [calories, setCalories] = useState("");
+  const [error, setError] = useState("");
+  const [isSaved, setIsSaved] = useState(false); // Tracks if user details are saved
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSaveDetails = async () => {
+    const { name, age, gender, height, weight, activityFactor } = formData;
+
+    if (!name || !age || !gender || !height || !weight || !activityFactor) {
+      alert("Please fill out all fields!");
+      return;
+    }
+
+    try {
+      await axios.post("/save-details", formData); // Replace with your backend route for saving details
+      alert("User details saved successfully!");
+      setIsSaved(true); // Show the calculate button after saving details
+      setError("");
+    } catch (err) {
+      console.error("Error saving user details:", err);
+      setError("Failed to save user details. Please try again.");
+    }
+  };
+
+  const handleCalculateCalories = async () => {
+    try {
+      const response = await axios.post("/calculate", formData); // Replace with your backend route for calculating calories
+      setCalories(response.data); // Backend returns calorie count as a string
+      setError("");
+    } catch (err) {
+      console.error("Error calculating calories:", err);
+      setError("Failed to calculate calories. Please try again.");
+    }
+  };
+
+  return (
+    <div className="container mt-5">
+      <h2 className="text-center mb-4">Calorie Calculator</h2>
+
+      {/* Input Form */}
+      <div className="card mb-4">
+        <div className="card-body">
+          <h5 className="card-title">Enter Your Details</h5>
+          <div className="form-group mb-3">
+            <label htmlFor="name">Name:</label>
+            <input
+              type="text"
+              className="form-control"
+              id="name"
+              name="name"
+              placeholder="Enter your name"
+              value={formData.name}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group mb-3">
+            <label htmlFor="age">Age:</label>
+            <input
+              type="number"
+              className="form-control"
+              id="age"
+              name="age"
+              placeholder="Enter your age"
+              value={formData.age}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group mb-3">
+            <label htmlFor="gender">Gender:</label>
+            <select
+              className="form-select"
+              id="gender"
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+            >
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div className="form-group mb-3">
+            <label htmlFor="height">Height (in cm):</label>
+            <input
+              type="number"
+              className="form-control"
+              id="height"
+              name="height"
+              placeholder="Enter your height in cm"
+              value={formData.height}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group mb-3">
+            <label htmlFor="weight">Weight (in kg):</label>
+            <input
+              type="number"
+              className="form-control"
+              id="weight"
+              name="weight"
+              placeholder="Enter your weight in kg"
+              value={formData.weight}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group mb-3">
+            <label htmlFor="activityFactor">Activity Factor:</label>
+            <select
+              className="form-select"
+              id="activityFactor"
+              name="activityFactor"
+              value={formData.activityFactor}
+              onChange={handleChange}
+            >
+              <option value="">Select Activity Level</option>
+              <option value="1.2">Sedentary (little or no exercise)</option>
+              <option value="1.375">Lightly active (light exercise)</option>
+              <option value="1.55">Moderately active (moderate exercise)</option>
+              <option value="1.725">Very active (hard exercise)</option>
+              <option value="1.9">Extra active (very hard exercise)</option>
+            </select>
+          </div>
+          {/* Save Button */}
+          {!isSaved && (
+            <button className="btn btn-primary" onClick={handleSaveDetails}>
+              Save Details
+            </button>
+          )}
+          {/* Calculate Button */}
+          {isSaved && (
+            <button className="btn btn-success" onClick={handleCalculateCalories}>
+              Calculate Calories
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Calorie Result */}
+      {calories && (
+        <div className="card mb-4">
+          <div className="card-body">
+            <h5 className="card-title">Your Daily Calorie Requirement</h5>
+            <p className="card-text">{calories} calories/day</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CalorieCalculator;
