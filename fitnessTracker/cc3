@@ -1,0 +1,159 @@
+@RestController
+@RequestMapping("/user-details")
+public class UserDetailsController {
+    private final UserDetailsService userDetailsService;
+    private final UserRepository userRepository;
+
+    public UserDetailsController(UserDetailsService userDetailsService, UserRepository userRepository) {
+        this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
+    }
+
+    @PostMapping("/{userId}")
+    public ResponseEntity<String> saveDetails(
+            @PathVariable Long userId,
+            @RequestBody UserDetails userDetails) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found for ID: " + userId));
+
+        userDetails.setUser(user);
+        userDetailsService.saveDetails(userDetails);
+
+        return ResponseEntity.ok("User details saved successfully for user ID: " + userId);
+    }
+
+    @PostMapping("/{userId}/calculate")
+    public ResponseEntity<String> calculateCalories(@PathVariable Long userId) {
+        UserDetails userDetails = userDetailsService.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("UserDetails not found for user ID: " + userId));
+
+        double calories = userDetailsService.calculateCalories(userDetails);
+
+        return ResponseEntity.ok("Your daily calorie requirement is: " + Math.round(calories) + " calories/day");
+    }
+}
+
+
+
+
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+@Service
+public class UserDetailsService {
+
+    private final UserDetailsRepository userDetailsRepository;
+
+    public UserDetailsService(UserDetailsRepository userDetailsRepository) {
+        this.userDetailsRepository = userDetailsRepository;
+    }
+
+    public void saveDetails(UserDetails userDetails) {
+        userDetailsRepository.save(userDetails);
+    }
+
+    public Optional<UserDetails> findByUserId(Long userId) {
+        return userDetailsRepository.findByUserId(userId);
+    }
+
+    public double calculateCalories(UserDetails userDetails) {
+        double bmr;
+        if ("male".equalsIgnoreCase(userDetails.getGender())) {
+            bmr = 88.362 + (13.397 * userDetails.getWeight())
+                + (4.799 * userDetails.getHeight()) - (5.677 * userDetails.getAge());
+        } else {
+            bmr = 447.593 + (9.247 * userDetails.getWeight())
+                + (3.098 * userDetails.getHeight()) - (4.330 * userDetails.getAge());
+        }
+        return bmr * userDetails.getActivityFactor();
+    }
+}
+
+
+
+
+import React, { useState } from "react";
+import axios from "axios";
+
+const CalorieCalculator = ({ userId }) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    age: "",
+    gender: "",
+    height: "",
+    weight: "",
+    activityFactor: "",
+  });
+  const [calories, setCalories] = useState("");
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSaveDetails = async () => {
+    const { name, age, gender, height, weight, activityFactor } = formData;
+
+    if (!name || !age || !gender || !height || !weight || !activityFactor) {
+      alert("Please fill out all fields!");
+      return;
+    }
+
+    try {
+      await axios.post(`/user-details/${userId}`, formData); // Use the correct userId
+      alert("User details saved successfully!");
+      setError("");
+    } catch (err) {
+      console.error("Error saving user details:", err);
+      setError("Failed to save user details. Please try again.");
+    }
+  };
+
+  const handleCalculateCalories = async () => {
+    try {
+      const response = await axios.post(`/user-details/${userId}/calculate`);
+      setCalories(response.data);
+      setError("");
+    } catch (err) {
+      console.error("Error calculating calories:", err);
+      setError("Failed to calculate calories. Please try again.");
+    }
+  };
+
+  return (
+    <div>
+      <h2>Calorie Calculator</h2>
+      <form>
+        <input name="name" placeholder="Name" value={formData.name} onChange={handleChange} />
+        <input name="age" placeholder="Age" value={formData.age} onChange={handleChange} />
+        <select name="gender" value={formData.gender} onChange={handleChange}>
+          <option value="">Select Gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+        </select>
+        <input name="height" placeholder="Height (cm)" value={formData.height} onChange={handleChange} />
+        <input name="weight" placeholder="Weight (kg)" value={formData.weight} onChange={handleChange} />
+        <select name="activityFactor" value={formData.activityFactor} onChange={handleChange}>
+          <option value="">Activity Level</option>
+          <option value="1.2">Sedentary</option>
+          <option value="1.375">Lightly Active</option>
+          <option value="1.55">Moderately Active</option>
+          <option value="1.725">Very Active</option>
+        </select>
+        <button type="button" onClick={handleSaveDetails}>
+          Save Details
+        </button>
+        <button type="button" onClick={handleCalculateCalories}>
+          Calculate Calories
+        </button>
+      </form>
+      {calories && <p>Your daily calorie requirement is: {calories}</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
+    </div>
+  );
+};
+
+export default CalorieCalculator;
+
