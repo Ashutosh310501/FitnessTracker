@@ -1,8 +1,8 @@
 <div class="container mt-5">
-  <div class="row">
-
+  <div class="row d-flex flex-column align-items-center">
+    
     <!-- Calories Burned -->
-    <div class="col-md-3 mb-4">
+    <div class="col-md-6 mb-4">
       <div class="card shadow-sm border-0 text-center">
         <div class="card-body">
           <i class="bi bi-fire text-danger fs-1"></i>
@@ -13,7 +13,7 @@
     </div>
 
     <!-- Time Spent -->
-    <div class="col-md-3 mb-4">
+    <div class="col-md-6 mb-4">
       <div class="card shadow-sm border-0 text-center">
         <div class="card-body">
           <i class="bi bi-clock text-success fs-1"></i>
@@ -24,7 +24,7 @@
     </div>
 
     <!-- Distance Covered -->
-    <div class="col-md-3 mb-4">
+    <div class="col-md-6 mb-4">
       <div class="card shadow-sm border-0 text-center">
         <div class="card-body">
           <i class="bi bi-geo-alt text-primary fs-1"></i>
@@ -35,7 +35,7 @@
     </div>
 
     <!-- Achieved Goals -->
-    <div class="col-md-3 mb-4">
+    <div class="col-md-6 mb-4">
       <div class="card shadow-sm border-0 text-center">
         <div class="card-body">
           <i class="bi bi-check-circle text-warning fs-1"></i>
@@ -53,33 +53,30 @@
 
 
 
-
-
-
-
-
-
-/* Card Styling */
+/* General Card Styling */
 .card {
-  border-radius: 15px; /* Smooth rounded corners */
+  width: 100%; /* Full width for better column alignment */
+  max-width: 500px; /* Optional: Limit the card width */
+  border-radius: 15px; /* Rounded corners */
   background: linear-gradient(135deg, #f9f9f9, #ffffff); /* Subtle gradient */
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin: auto; /* Center cards horizontally */
 }
 
 /* Hover Effect */
 .card:hover {
-  transform: scale(1.05); /* Slight zoom effect */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Highlight with shadow */
+  transform: scale(1.05); /* Slight zoom */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Shadow on hover */
 }
 
 /* Icon Styling */
 .card i {
-  padding: 10px;
+  padding: 15px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.05); /* Subtle background circle */
 }
 
-/* Title and Text Styling */
+/* Text Styling */
 .card-title {
   font-size: 1.2rem;
   font-weight: 600;
@@ -87,7 +84,5 @@
 
 .card-text {
   font-size: 1.1rem;
-  color: #555; /* Neutral text color */
+  color: #555;
 }
-
-
