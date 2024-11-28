@@ -1,88 +1,199 @@
-<div class="container mt-5">
-  <div class="row d-flex flex-column align-items-center">
-    
-    <!-- Calories Burned -->
-    <div class="col-md-6 mb-4">
-      <div class="card shadow-sm border-0 text-center">
-        <div class="card-body">
-          <i class="bi bi-fire text-danger fs-1"></i>
-          <h5 class="card-title mt-3">Calories Burned</h5>
-          <p class="card-text fw-bold">350 kcal</p> <!-- Replace with dynamic value -->
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+
+const UserDetailsForm = () => {
+  const [formData, setFormData] = useState({
+    id: "",
+    name: "",
+    height: "",
+    weight: "",
+    age: "",
+    gender: "",
+    activityFactor: "",
+  });
+
+  const [calories, setCalories] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [isUpdate, setIsUpdate] = useState(false); // Track whether the user details already exist
+
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      // Fetch user details from the backend
+      axios
+        .get(`http://localhost:8080/user-details/${userId}`)
+        .then((response) => {
+          if (response.data) {
+            setFormData(response.data); // Populate form with fetched details
+            setIsUpdate(true); // Mark as update mode
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          setError("Failed to fetch user details.");
+        });
+    } else {
+      setMessage("No user ID found in local storage. Please log in.");
+    }
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSaveOrUpdateDetails = async () => {
+    const { id, name, height, weight, age, gender, activityFactor } = formData;
+
+    if (!id || !name || !height || !weight || !age || !gender || !activityFactor) {
+      setError("All fields are required!");
+      return;
+    }
+
+    try {
+      if (isUpdate) {
+        // Call the update route
+        await axios.put(`http://localhost:8080/user-details/${id}`, formData);
+        setMessage("User details updated successfully!");
+      } else {
+        // Call the save route
+        await axios.post(`http://localhost:8080/user-details/${id}`, formData);
+        setMessage("User details saved successfully!");
+      }
+      setError("");
+    } catch (err) {
+      console.error(err);
+      setError("Failed to save or update user details. Please try again.");
+    }
+  };
+
+  const handleCalculateCalories = async () => {
+    try {
+      const response = await axios.post(
+        `http://localhost:8080/user-details/${formData.id}/calculate`
+      );
+      setCalories(response.data);
+      setMessage("");
+      setError("");
+    } catch (err) {
+      console.error(err);
+      setError("Failed to calculate calories. Please try again.");
+    }
+  };
+
+  return (
+    <div className="container mt-5">
+      <h2 className="text-center mb-4">User Details & Calorie Calculator</h2>
+
+      {formData.id && <p>Your User ID: {formData.id}</p>}
+      {!formData.id && <p>Please log in to proceed.</p>}
+
+      <div className="card mb-4">
+        <div className="card-body">
+          <h5 className="card-title">Enter Your Details</h5>
+          <div className="form-group mb-3">
+            <label htmlFor="name">Name:</label>
+            <input
+              type="text"
+              className="form-control"
+              id="name"
+              name="name"
+              placeholder="Enter your name"
+              value={formData.name}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group mb-3">
+            <label htmlFor="height">Height (in cm):</label>
+            <input
+              type="number"
+              className="form-control"
+              id="height"
+              name="height"
+              placeholder="Enter your height"
+              value={formData.height}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group mb-3">
+            <label htmlFor="weight">Weight (in kg):</label>
+            <input
+              type="number"
+              className="form-control"
+              id="weight"
+              name="weight"
+              placeholder="Enter your weight"
+              value={formData.weight}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group mb-3">
+            <label htmlFor="age">Age:</label>
+            <input
+              type="number"
+              className="form-control"
+              id="age"
+              name="age"
+              placeholder="Enter your age"
+              value={formData.age}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="form-group mb-3">
+            <label htmlFor="gender">Gender:</label>
+            <select
+              className="form-select"
+              id="gender"
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+            >
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div className="form-group mb-3">
+            <label htmlFor="activityFactor">Activity Factor:</label>
+            <select
+              className="form-select"
+              id="activityFactor"
+              name="activityFactor"
+              value={formData.activityFactor}
+              onChange={handleChange}
+            >
+              <option value="">Select Activity Level</option>
+              <option value="1.2">Sedentary (little or no exercise)</option>
+              <option value="1.375">Lightly active (light exercise)</option>
+              <option value="1.55">Moderately active (moderate exercise)</option>
+              <option value="1.725">Very active (hard exercise)</option>
+              <option value="1.9">Extra active (very hard exercise)</option>
+            </select>
+          </div>
+
+          {/* Save/Update Button */}
+          <button className="btn btn-primary mb-3" onClick={handleSaveOrUpdateDetails}>
+            {isUpdate ? "Update User Details" : "Save User Details"}
+          </button>
+
+          {/* Calculate Calories Button */}
+          <button className="btn btn-success" onClick={handleCalculateCalories}>
+            Calculate Calories
+          </button>
         </div>
       </div>
-    </div>
 
-    <!-- Time Spent -->
-    <div class="col-md-6 mb-4">
-      <div class="card shadow-sm border-0 text-center">
-        <div class="card-body">
-          <i class="bi bi-clock text-success fs-1"></i>
-          <h5 class="card-title mt-3">Time Spent</h5>
-          <p class="card-text fw-bold">45 mins</p> <!-- Replace with dynamic value -->
+      {message && <div className="alert alert-success">{message}</div>}
+      {error && <div className="alert alert-danger">{error}</div>}
+      {calories && (
+        <div className="alert alert-info">
+          Your daily calorie requirement is: {calories}
         </div>
-      </div>
+      )}
     </div>
+  );
+};
 
-    <!-- Distance Covered -->
-    <div class="col-md-6 mb-4">
-      <div class="card shadow-sm border-0 text-center">
-        <div class="card-body">
-          <i class="bi bi-geo-alt text-primary fs-1"></i>
-          <h5 class="card-title mt-3">Distance Covered</h5>
-          <p class="card-text fw-bold">5 km</p> <!-- Replace with dynamic value -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Achieved Goals -->
-    <div class="col-md-6 mb-4">
-      <div class="card shadow-sm border-0 text-center">
-        <div class="card-body">
-          <i class="bi bi-check-circle text-warning fs-1"></i>
-          <h5 class="card-title mt-3">Achieved Goals</h5>
-          <p class="card-text fw-bold">3/5</p> <!-- Replace with dynamic value -->
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-
-
-
-
-
-/* General Card Styling */
-.card {
-  width: 100%; /* Full width for better column alignment */
-  max-width: 500px; /* Optional: Limit the card width */
-  border-radius: 15px; /* Rounded corners */
-  background: linear-gradient(135deg, #f9f9f9, #ffffff); /* Subtle gradient */
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  margin: auto; /* Center cards horizontally */
-}
-
-/* Hover Effect */
-.card:hover {
-  transform: scale(1.05); /* Slight zoom */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); /* Shadow on hover */
-}
-
-/* Icon Styling */
-.card i {
-  padding: 15px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.05); /* Subtle background circle */
-}
-
-/* Text Styling */
-.card-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-
-.card-text {
-  font-size: 1.1rem;
-  color: #555;
-}
+export default UserDetailsForm;
