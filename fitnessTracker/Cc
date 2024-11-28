@@ -27,6 +27,50 @@ const CalorieCalculator = () => {
       return;
     }
 
+
+
+
+
+
+<div className="container mt-5">
+  <div className="row">
+
+    {/* Calories Burned Card */}
+    <div className="col-md-4 mb-4">
+      <div className="card shadow-sm border-0">
+        <div className="card-body text-center">
+          <i className="bi bi-fire text-danger fs-1"></i> {/* Bootstrap icon */}
+          <h5 className="card-title mt-3">Calories Burned</h5>
+          <p className="card-text fw-bold">{caloriesBurned || "0"} kcal</p>
+        </div>
+      </div>
+    </div>
+
+    {/* Distance Covered Card */}
+    <div className="col-md-4 mb-4">
+      <div className="card shadow-sm border-0">
+        <div className="card-body text-center">
+          <i className="bi bi-geo-alt text-primary fs-1"></i>
+          <h5 className="card-title mt-3">Distance Covered</h5>
+          <p className="card-text fw-bold">{distanceCovered || "0"} km</p>
+        </div>
+      </div>
+    </div>
+
+    {/* Time Spent Card */}
+    <div className="col-md-4 mb-4">
+      <div className="card shadow-sm border-0">
+        <div className="card-body text-center">
+          <i className="bi bi-clock text-success fs-1"></i>
+          <h5 className="card-title mt-3">Time Spent</h5>
+          <p className="card-text fw-bold">{timeSpent || "0"} mins</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
     try {
       await axios.post("/save-details", formData); // Replace with your backend route for saving details
       alert("User details saved successfully!");
@@ -151,7 +195,8 @@ const CalorieCalculator = () => {
           )}
         </div>
       </div>
-
+export default CalorieCalculator;
+-------------------------------------------------
       {/* Calorie Result */}
       {calories && (
         <div className="card mb-4">
@@ -172,4 +217,14 @@ const CalorieCalculator = () => {
   );
 };
 
-export default CalorieCalculator;
+.card {
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
+  border-radius: 10px;
+}
+
+
+.card:hover {
+  transform: scale(1.05);
+  transition: 0.3s;
+}
+
