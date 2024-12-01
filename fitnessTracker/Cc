@@ -12,7 +12,6 @@ const StepsTracker = () => {
   const [error, setError] = useState("");
 
   const userId = localStorage.getItem("userId");
-
   useEffect(() => {
     if (userId) {
       fetchStepsHistory();
