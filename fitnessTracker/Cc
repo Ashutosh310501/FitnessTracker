@@ -1,54 +1,141 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <title>Form Validation</title>
-</head>
-<body>
-  <div class="container mt-5">
-    <form id="loginForm" class="needs-validation" novalidate>
-      <!-- Username Field -->
-      <div class="mb-3">
-        <label for="username" class="form-label">Username</label>
-        <input type="text" class="form-control" id="username" name="username" required minlength="4" maxlength="20">
-        <div class="invalid-feedback">
-          Username must be between 4 and 20 characters.
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+
+const StepsTracker = () => {
+  const [stepsData, setStepsData] = useState({
+    date: new Date().toISOString().split("T")[0],
+    distance: "",
+  });
+  const [history, setHistory] = useState([]);
+  const [editingEntry, setEditingEntry] = useState(null);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const userId = localStorage.getItem("userId");
+
+  useEffect(() => {
+    if (userId) {
+      fetchStepsHistory();
+    } else {
+      setError("User is not logged in.");
+    }
+  }, [userId]);
+
+  const fetchStepsHistory = async () => {
+    try {
+      const response = await axios.get(`http://localhost:8080/steps-tracker/${userId}`);
+      setHistory(response.data);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch steps history.");
+    }
+  };
+
+  const handleDelete = async (entryId) => {
+    try {
+      await axios.delete(`http://localhost:8080/steps-tracker/${userId}/${entryId}`);
+      setMessage("Steps entry deleted successfully.");
+      setError("");
+      fetchStepsHistory();
+    } catch (err) {
+      console.error(err);
+      setError("Failed to delete steps entry.");
+    }
+  };
+
+  const handleEdit = (entry) => {
+    setStepsData({ date: entry.date, distance: entry.distance });
+    setEditingEntry(entry.id);
+  };
+
+  const handleSaveOrUpdate = async () => {
+    try {
+      if (editingEntry) {
+        // Update existing entry
+        await axios.put(`http://localhost:8080/steps-tracker/${userId}/${editingEntry}`, stepsData);
+        setMessage("Steps entry updated successfully.");
+      } else {
+        // Save new entry
+        await axios.post(`http://localhost:8080/steps-tracker/${userId}`, stepsData);
+        setMessage("Steps entry saved successfully.");
+      }
+      setError("");
+      fetchStepsHistory();
+      setEditingEntry(null);
+      setStepsData({ date: "", distance: "" });
+    } catch (err) {
+      console.error(err);
+      setError("Failed to save or update steps entry.");
+    }
+  };
+
+  return (
+    <div className="container mt-5">
+      <h2>Steps Tracker</h2>
+
+      <div className="card mb-4">
+        <div className="card-body">
+          <div className="form-group mb-3">
+            <label htmlFor="date">Date:</label>
+            <input
+              type="date"
+              className="form-control"
+              id="date"
+              name="date"
+              value={stepsData.date}
+              onChange={(e) => setStepsData({ ...stepsData, date: e.target.value })}
+            />
+          </div>
+          <div className="form-group mb-3">
+            <label htmlFor="distance">Distance (km):</label>
+            <input
+              type="number"
+              className="form-control"
+              id="distance"
+              name="distance"
+              value={stepsData.distance}
+              onChange={(e) => setStepsData({ ...stepsData, distance: e.target.value })}
+            />
+          </div>
+          <button className="btn btn-primary" onClick={handleSaveOrUpdate}>
+            {editingEntry ? "Update" : "Save"}
+          </button>
         </div>
       </div>
 
-      <!-- Password Field -->
-      <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" name="password" required minlength="8">
-        <div class="invalid-feedback">
-          Password must be at least 8 characters long.
-        </div>
-      </div>
+      {message && <div className="alert alert-success">{message}</div>}
+      {error && <div className="alert alert-danger">{error}</div>}
 
-      <!-- Submit Button -->
-      <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
-  </div>
+      <h3>History</h3>
+      <table className="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Steps</th>
+            <th>Distance (km)</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {history.map((entry) => (
+            <tr key={entry.id}>
+              <td>{entry.date}</td>
+              <td>{entry.steps}</td>
+              <td>{entry.distance}</td>
+              <td>
+                <button className="btn btn-warning me-2" onClick={() => handleEdit(entry)}>
+                  Edit
+                </button>
+                <button className="btn btn-danger" onClick={() => handleDelete(entry.id)}>
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
-  <script>
-    // Bootstrap Validation Script
-    (function () {
-      'use strict';
-      const forms = document.querySelectorAll('.needs-validation');
-
-      Array.from(forms).forEach(form => {
-        form.addEventListener('submit', event => {
-          if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
-          }
-          form.classList.add('was-validated');
-        }, false);
-      });
-    })();
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+export default StepsTracker;
