@@ -1,0 +1,156 @@
+package com.yourpackage.controller;
+
+import com.yourpackage.service.UsersRegistrationsService;
+import com.yourpackage.model.UsersRegistration;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import java.util.Optional;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(UsersRegistrationController.class)
+public class UsersRegistrationControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Mock
+    private UsersRegistrationsService usersRegistrationsService;
+
+    @InjectMocks
+    private UsersRegistrationController usersRegistrationController;
+
+    @Test
+    public void testGetAllUsers() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/users"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testGetUserById() throws Exception {
+        UsersRegistration user = new UsersRegistration(1, "John", "Doe", "john.doe@example.com");
+        when(usersRegistrationsService.getUsersById(1)).thenReturn(Optional.of(user));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/users/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.email").value("john.doe@example.com"));
+    }
+
+    @Test
+    public void testAddNewUser() throws Exception {
+        UsersRegistration user = new UsersRegistration(null, "John", "Doe", "john.doe@example.com");
+
+        when(usersRegistrationsService.addNewUser(user)).thenReturn(user);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                        .contentType("application/json")
+                        .content("{\"name\":\"John\",\"email\":\"john.doe@example.com\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testDeleteUserById() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/users/1"))
+                .andExpect(status().isOk());
+    }
+}
+
+
+package com.yourpackage.controller;
+
+import com.yourpackage.model.EmployerRegistration;
+import com.yourpackage.model.Login;
+import com.yourpackage.service.EmployerRegistrationService;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import java.util.Optional;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(EmployerRegistrationController.class)
+public class EmployerRegistrationControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Mock
+    private EmployerRegistrationService employerRegistrationService;
+
+    @InjectMocks
+    private EmployerRegistrationController employerRegistrationController;
+
+    @Test
+    public void testGetAllEmployers() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/employers"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testGetEmployerById() throws Exception {
+        EmployerRegistration employer = new EmployerRegistration(1, "Tech Corp", "techcorp@example.com");
+        when(employerRegistrationService.getEmployerById(1)).thenReturn(Optional.of(employer));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/employers/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("Tech Corp"))
+                .andExpect(jsonPath("$.email").value("techcorp@example.com"));
+    }
+
+    @Test
+    public void testGetByEmployerEmail() throws Exception {
+        EmployerRegistration employer = new EmployerRegistration(1, "Tech Corp", "techcorp@example.com");
+        when(employerRegistrationService.getByEmployerEmail("techcorp@example.com")).thenReturn(Optional.of(employer));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/employers/email/techcorp@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("techcorp@example.com"));
+    }
+
+    @Test
+    public void testAddNewEmployer() throws Exception {
+        EmployerRegistration employer = new EmployerRegistration(null, "Tech Corp", "techcorp@example.com");
+
+        when(employerRegistrationService.addNewEmployer(employer)).thenReturn(employer);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/employers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Tech Corp\",\"email\":\"techcorp@example.com\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testLogin() throws Exception {
+        Login login = new Login("techcorp@example.com", "password123");
+
+        when(employerRegistrationService.login(login)).thenReturn(ResponseEntity.ok("Login successful"));
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/employer/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"techcorp@example.com\",\"password\":\"password123\"}"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Login successful"));
+    }
+
+    @Test
+    public void testDeleteEmployerById() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/employers/1"))
+                .andExpect(status().isOk());
+    }
+}
